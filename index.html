@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TADIS SeKaTa — Takwim Digital SeKaTa | SK Tampasuk 1, Kota Belud</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <!-- Google Firebase Realtime Database SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style id="dynamic-page-style">
     @page {
       size: A4 landscape;
@@ -381,8 +384,8 @@
 
           <button onclick="switchMainView('tetapan')" id="nav-btn-tetapan" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition">
             <span class="flex items-center gap-2.5">
-              <span>☁️</span>
-              <span>Google Sheets & Tetapan</span>
+              <span>⚙️</span>
+              <span>Firebase Cloud & Tetapan</span>
             </span>
           </button>
         </div>
@@ -908,82 +911,53 @@
       </section>
 
       <!-- ===================================================== -->
-      <!-- VIEW 5: INTEGRASI GOOGLE SHEETS & TETAPAN SEKOLAH     -->
+      <!-- VIEW 5: PANGKALAN DATA FIREBASE & TETAPAN SEKOLAH     -->
       <!-- ===================================================== -->
       <section id="view-tetapan" class="no-print hidden space-y-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <!-- Kad Integrasi Google Sheets -->
+          <!-- Kad Integrasi Firebase Realtime Cloud -->
           <div class="solid-card p-5 space-y-4 text-xs">
             <div>
-              <span class="px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                PANGKALAN DATA DALAM TALIAN
+              <span class="px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                PANGKALAN DATA MASA-NYATA (FIREBASE CLOUD)
               </span>
-              <h3 class="text-base font-extrabold text-slate-900 mt-1">
-                ☁️ Integrasi Google Sheets (Masa Nyata)
+              <h3 class="text-base font-extrabold text-slate-900 mt-1 flex items-center gap-2">
+                <span>🔥</span> Google Firebase Realtime Database
               </h3>
-              <p class="text-slate-600">
-                Semua aktiviti yang ditambah atau dikemas kini oleh guru akan disimpan terus ke dalam Google Sheets sekolah supaya dilihat oleh semua pengguna.
+              <p class="text-slate-600 mt-0.5">
+                Sistem TADIS SeKaTa aktif disambung ke Google Firebase Cloud. Sebarang aktiviti yang ditambah atau diedit oleh guru di telefon atau komputer akan disegerakkan secara langsung (real-time) ke semua peranti secara automatik tanpa perlu refresh.
               </p>
             </div>
 
             <div class="solid-subbox p-3.5 space-y-3">
-              <div>
-                <label class="form-label">URL Web App Google Apps Script (<code>/exec</code>)</label>
-                <div class="flex flex-col sm:flex-row gap-2">
-                  <input type="url" id="cloud-endpoint-input" placeholder="https://script.google.com/macros/s/.../exec" class="form-input flex-1">
-                  <button onclick="saveCloudEndpoint()" class="btn-primary px-4 py-2 shrink-0">
-                    💾 Simpan URL
-                  </button>
-                </div>
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-800">Status Sambungan Firebase:</span>
+                <span id="fb-status-badge" class="px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  ⚡ Tersambung (Masa-Nyata)
+                </span>
               </div>
-
+              <div class="text-[11px] text-slate-500 font-mono">
+                Pangkalan Data: tadis-sekata-default-rtdb.firebaseio.com
+              </div>
               <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-300">
-                <button onclick="syncPushToCloud(true)" class="btn-emerald px-3 py-1.5">
-                  📤 Hantar Semua Data ke Google Sheets
+                <button onclick="syncPushToFirebase(true)" class="btn-primary px-3.5 py-1.5 flex items-center gap-1.5">
+                  <span>☁️</span>
+                  <span>Muat Naik / Segerak ke Firebase</span>
                 </button>
-                <button onclick="syncPullFromCloud(true)" class="btn-secondary px-3 py-1.5">
-                  🔄 Tarik Data dari Google Sheets
+                <button onclick="syncPullFromFirebase(true)" class="btn-secondary px-3.5 py-1.5 flex items-center gap-1.5">
+                  <span>🔄</span>
+                  <span>Tarik Data Terkini dari Firebase</span>
                 </button>
               </div>
             </div>
 
-            <div class="space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-900">Panduan Pantas 3 Langkah Google Sheets:</span>
-                <button onclick="copyTextById('gas-code-template')" class="btn-secondary px-2.5 py-1 text-xs">
-                  📋 Salin Kod Apps Script
-                </button>
-              </div>
-              <ol class="list-decimal pl-4 space-y-1 text-slate-600">
-                <li>Buka Google Sheets baharu di <strong>sheets.new</strong> dan klik menu <strong>Extensions &gt; Apps Script</strong>.</li>
-                <li>Salin kod di bawah dan tampal ke dalam editor Apps Script.</li>
-                <li>Klik <strong>Deploy &gt; New deployment &gt; Web app</strong> (Pilih <em>Who has access: Anyone</em>), kemudian tampal URL Web App di ruangan atas.</li>
-              </ol>
-              <pre id="gas-code-template" class="p-3 rounded-lg bg-slate-900 text-slate-100 border border-slate-700 overflow-x-auto font-mono text-xs max-h-40">const SHEET_NAME = 'Takwim_Sekolah';
-
-function doGet(e) {
-  const prop = PropertiesService.getScriptProperties().getProperty('TAKWIM_DATA');
-  const data = prop ? JSON.parse(prop) : { activities: [], updatedAt: null };
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  const raw = e.postData.contents;
-  const payload = JSON.parse(raw);
-  PropertiesService.getScriptProperties().setProperty('TAKWIM_DATA', raw);
-  if (payload && Array.isArray(payload.activities)) {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    if (ss) {
-      let sheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
-      sheet.clearContents();
-      sheet.appendRow(['Tarikh Mula','Tarikh Tamat','Masa Mula','Masa Tamat','Tajuk','Kategori','Unit/Panitia','Lokasi','Sasaran','Nama Penyelaras','Jawatan Penyelaras','Status','Catatan']);
-      payload.activities.forEach(a => sheet.appendRow([a.date, a.endDate||a.date, a.startTime, a.endTime, a.title, a.category, a.unit, a.location, a.target, a.coordinator, a.coordinatorRole||'', a.status, a.notes||'']));
-    }
-  }
-  return ContentService.createTextOutput(JSON.stringify({ status: 'ok' }))
-    .setMimeType(ContentService.MimeType.JSON);
-}</pre>
+            <div class="space-y-1.5 text-slate-600">
+              <div class="font-bold text-slate-900">Kelebihan Firebase Cloud:</div>
+              <ul class="list-disc pl-4 space-y-0.5">
+                <li>Segerak masa-nyata: Semua guru melihat perubahan dalam masa &lt; 1 saat.</li>
+                <li>Tidak bergantung kepada Google Drive atau akaun peribadi.</li>
+                <li>Menyokong fungsi luar talian (offline cache) jika tiada sambungan internet.</li>
+              </ul>
             </div>
           </div>
 
@@ -2093,6 +2067,137 @@ function doPost(e) {
       };
     } catch (e) {}
 
+    // =========================================================
+    // KONFIGURASI & PENYEGERAKAN GOOGLE FIREBASE REALTIME CLOUD
+    // =========================================================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCXNlGbYhxHVSqvMdURYsxrtod0T4eXT5w",
+      authDomain: "tadis-sekata.firebaseapp.com",
+      databaseURL: "https://tadis-sekata-default-rtdb.firebaseio.com",
+      projectId: "tadis-sekata",
+      storageBucket: "tadis-sekata.firebasestorage.app",
+      messagingSenderId: "930412013168",
+      appId: "1:930412013168:web:93ec417bac2f2437a7f6b5",
+      measurementId: "G-6X9D52B6G3"
+    };
+
+    let fbDatabase = null;
+    let isFirebaseConnected = false;
+    let isRemoteUpdate = false;
+
+    function initFirebaseSync() {
+      try {
+        if (typeof firebase !== 'undefined') {
+          if (!firebase.apps || !firebase.apps.length) {
+            firebase.initializeApp(FIREBASE_CONFIG);
+          }
+          fbDatabase = firebase.database();
+          const dataRef = fbDatabase.ref('tadis_sekata/data');
+
+          // Listener Masa-Nyata (Real-time listener ke pangkalan data cloud)
+          dataRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && Array.isArray(data.activities) && data.activities.length > 0) {
+              isRemoteUpdate = true;
+              state.activities = data.activities;
+              if (data.units) state.units = data.units;
+              if (data.settings) {
+                state.settings = { ...state.settings, ...data.settings };
+              }
+              try {
+                localStorage.setItem(STORAGE_KEY_ACTIVITIES, JSON.stringify(state.activities));
+                localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(state.settings));
+                localStorage.setItem(STORAGE_KEY_UNITS, JSON.stringify(state.units));
+              } catch (e) {}
+
+              populateUnitSelectors();
+              syncControlsWithState();
+              renderAllViews();
+              updateCloudStatusUI(true, 'Firebase Realtime Aktif');
+              isRemoteUpdate = false;
+            } else if (!data || !data.activities || data.activities.length === 0) {
+              // Jika pangkalan data Firebase belum ada rekod aktiviti, muat naik aktiviti sedia ada sekarang
+              syncPushToFirebase(false);
+            }
+          }, (err) => {
+            console.warn('Firebase sync warning:', err);
+            updateCloudStatusUI(false, 'Gagal Sambung Firebase');
+          });
+
+          // Listener status sambungan internet
+          fbDatabase.ref('.info/connected').on('value', (snap) => {
+            isFirebaseConnected = !!snap.val();
+            updateCloudStatusUI(isFirebaseConnected, isFirebaseConnected ? 'Firebase Realtime Aktif' : 'Di Luar Talian (Mod Cache)');
+          });
+        }
+      } catch (err) {
+        console.warn('initFirebaseSync exception:', err);
+      }
+    }
+
+    function syncPushToFirebase(showMessage = false) {
+      if (isRemoteUpdate) return;
+      try {
+        if (fbDatabase) {
+          const payload = {
+            updatedAt: new Date().toISOString(),
+            settings: state.settings,
+            units: state.units,
+            activities: state.activities
+          };
+          fbDatabase.ref('tadis_sekata/data').set(payload)
+            .then(() => {
+              if (showMessage) showToast('☁️ Data takwim berjaya disimpan ke Firebase Cloud!');
+            })
+            .catch((err) => {
+              if (showMessage) showToast('⚠️ Ralat menyimpan ke Firebase Cloud.');
+            });
+        }
+      } catch (e) {}
+    }
+
+    function syncPullFromFirebase(showMessage = false) {
+      try {
+        if (fbDatabase) {
+          fbDatabase.ref('tadis_sekata/data').once('value')
+            .then((snapshot) => {
+              const data = snapshot.val();
+              if (data && Array.isArray(data.activities)) {
+                state.activities = data.activities;
+                if (data.units) state.units = data.units;
+                if (data.settings) state.settings = { ...state.settings, ...data.settings };
+                persistData(false);
+                populateUnitSelectors();
+                syncControlsWithState();
+                renderAllViews();
+                if (showMessage) showToast('🔄 Data terkini berjaya ditarik dari Firebase!');
+              }
+            })
+            .catch(() => {
+              if (showMessage) showToast('⚠️ Gagal menarik data dari Firebase.');
+            });
+        }
+      } catch (e) {}
+    }
+
+    function updateCloudStatusUI(connected, text) {
+      const dot = document.getElementById('gsheet-dot');
+      const label = document.getElementById('gsheet-status-label');
+      const badge = document.getElementById('fb-status-badge');
+      if (dot) {
+        dot.className = connected ? 'w-2 h-2 rounded-full bg-emerald-400' : 'w-2 h-2 rounded-full bg-amber-400';
+      }
+      if (label && text) {
+        label.textContent = text;
+      }
+      if (badge) {
+        badge.className = connected
+          ? 'px-2.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300'
+          : 'px-2.5 py-0.5 rounded-full font-bold bg-amber-100 text-amber-800 border border-amber-300';
+        badge.textContent = connected ? '⚡ Tersambung (Masa-Nyata)' : '⚠️ Di Luar Talian';
+      }
+    }
+
     function initApp() {
       loadStateFromStorage();
       checkUrlParameters();
@@ -2100,9 +2205,7 @@ function doPost(e) {
       syncControlsWithState();
       renderAllViews();
 
-      if (state.settings.cloudEndpoint) {
-        syncPullFromCloud(false);
-      }
+      initFirebaseSync();
     }
 
     function loadStateFromStorage() {
@@ -2162,8 +2265,8 @@ function doPost(e) {
         if (broadcastChannel) {
           broadcastChannel.postMessage({ type: 'SYNC', ts: Date.now() });
         }
-        if (pushCloud && state.settings.cloudEndpoint) {
-          syncPushToCloud(false);
+        if (pushCloud) {
+          syncPushToFirebase(false);
         }
       } catch (e) {}
     }
@@ -2202,7 +2305,6 @@ function doPost(e) {
       document.getElementById('setting-headmaster').value = state.settings.headmaster;
       document.getElementById('setting-admin-pin').value = state.settings.adminPin || 'sekata';
       document.getElementById('setting-approval-policy').value = state.settings.approvalPolicy;
-      document.getElementById('cloud-endpoint-input').value = state.settings.cloudEndpoint || '';
 
       // Segerakkan input Nama & Jawatan Penyelaras Takwim di semua tempat
       const cName = state.settings.takwimCoordinatorName || '';
@@ -2222,9 +2324,11 @@ function doPost(e) {
       }
 
       const gsheetLabel = document.getElementById('gsheet-status-label');
-      gsheetLabel.textContent = state.settings.cloudEndpoint
-        ? 'Google Sheets Tersambung'
-        : 'Storan Aktif (Sedia Sambung Sheets)';
+      if (gsheetLabel) {
+        gsheetLabel.textContent = isFirebaseConnected || (typeof firebase !== 'undefined')
+          ? 'Firebase Realtime Aktif'
+          : 'Storan Tempatan (Offline)';
+      }
 
       updateRoleSidebarUI();
     }
@@ -3877,13 +3981,12 @@ function doPost(e) {
     }
 
     // =========================================================
-    // KONGSI PAUTAN & INTEGRASI GOOGLE SHEETS
+    // KONGSI PAUTAN RASMI TADIS SeKaTa
     // =========================================================
     function openShareModal() {
       const baseUrl = window.location.href.split('?')[0];
-      const cloudParam = state.settings.cloudEndpoint ? `&cloud=${encodeURIComponent(state.settings.cloudEndpoint)}` : '';
-      document.getElementById('share-public-url').value = `${baseUrl}?mode=public&month=${state.selectedMonth}&year=${state.selectedYear}${cloudParam}`;
-      document.getElementById('share-manage-url').value = `${baseUrl}?mode=manage&month=${state.selectedMonth}&year=${state.selectedYear}${cloudParam}`;
+      document.getElementById('share-public-url').value = `${baseUrl}?mode=public&month=${state.selectedMonth}&year=${state.selectedYear}`;
+      document.getElementById('share-manage-url').value = `${baseUrl}?mode=manage&month=${state.selectedMonth}&year=${state.selectedYear}`;
       document.getElementById('modal-share').classList.remove('hidden');
     }
 
@@ -3897,64 +4000,9 @@ function doPost(e) {
       window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
     }
 
-    function saveCloudEndpoint() {
-      state.settings.cloudEndpoint = document.getElementById('cloud-endpoint-input').value.trim();
-      persistData(false);
-      syncControlsWithState();
-      showToast('☁️ URL Google Sheets Web App telah disimpan.');
-    }
-
-    async function syncPushToCloud(showMessage = true) {
-      const url = state.settings.cloudEndpoint;
-      if (!url) {
-        if (showMessage) {
-          switchMainView('tetapan');
-          showToast('⚠️ Sila masukkan URL Web App Google Sheets terlebih dahulu.');
-        }
-        return;
-      }
-      try {
-        await fetch(url, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            updatedAt: new Date().toISOString(),
-            settings: state.settings,
-            units: state.units,
-            activities: state.activities
-          })
-        });
-        if (showMessage) showToast('✅ Data takwim berjaya disegerakkan ke Google Sheets!');
-      } catch (e) {
-        if (showMessage) showToast('⚠️ Tidak dapat menghubungi Google Sheets.');
-      }
-    }
-
-    async function syncPullFromCloud(showMessage = true) {
-      const url = state.settings.cloudEndpoint;
-      if (!url) {
-        if (showMessage) {
-          switchMainView('tetapan');
-          showToast('⚠️ Sila masukkan URL Web App Google Sheets pada bahagian Tetapan.');
-        }
-        return;
-      }
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data && Array.isArray(data.activities) && data.activities.length > 0) {
-          state.activities = data.activities;
-          if (data.units) state.units = data.units;
-          persistData(false);
-          populateUnitSelectors();
-          renderAllViews();
-          if (showMessage) showToast('🔄 Data terkini berjaya ditarik daripada Google Sheets!');
-        }
-      } catch (e) {
-        if (showMessage) showToast('⚠️ Gagal menarik data daripada Google Sheets.');
-      }
-    }
+    function saveCloudEndpoint() {}
+    function syncPushToCloud() {}
+    function syncPullFromCloud() {}
 
     function saveSchoolSettings() {
       state.settings.schoolName = document.getElementById('setting-school-name').value.trim() || 'SK Tampasuk 1, Kota Belud';
